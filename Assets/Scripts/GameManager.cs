@@ -57,57 +57,57 @@ public class GameManager : MonoBehaviour
         buyWarriorBtnText.text += $"({WarriorCost})";
 
         UpdateTexts();
+        HarvestTimer.AddCycleCallback(OnHarvest);
+        EatTimer.AddCycleCallback(OnEat);
+        RaidTimer.AddCycleCallback(OnRaid);
     }
 
-    void Update()
+    private void OnHarvest()
     {
-        if (HarvestTimer.Tick)
-        {
-            var manufactured = WheatPerPeasant * PeasantCount;
-            WheatCount += manufactured;
-            _wheatManufactured += manufactured;
+        var manufactured = WheatPerPeasant * PeasantCount;
+        WheatCount += manufactured;
+        _wheatManufactured += manufactured;
 
-            UpdateTexts();
+        UpdateTexts();
+    }
+
+    private void OnEat()
+    {
+        var toEat = WheatToWarriors * WarriorCount;
+        WheatCount -= toEat;
+
+        if (toEat > 0)
+        {
+            _soundsPlayer.Eat();
         }
 
-        if (EatTimer.Tick)
+        if (WheatCount < 0)
         {
-            var toEat = WheatToWarriors * WarriorCount;
-            WheatCount -= toEat;
+            WheatCount = 0;
+        }
+        UpdateTexts();
+    }
 
-            if (toEat > 0) {
-                _soundsPlayer.Eat();
-            }
+    private void OnRaid()
+    {
+        _wavesSurvived++;
 
-            if (WheatCount < 0)
-            {
-                WheatCount = 0;
-            }
-            UpdateTexts();
+        if (WavesDelay > 0)
+        {
+            WavesDelay--;
+        }
+        else
+        {
+            WarriorCount -= NextRaidCount;
+            NextRaidCount += RaidCountIncrease;
+            _soundsPlayer.Fight();
         }
 
-        if (RaidTimer.Tick)
+        UpdateTexts();
+
+        if (WarriorCount < 0)
         {
-
-            _wavesSurvived++;
-
-            if (WavesDelay > 0)
-            {
-                WavesDelay--;
-            }
-            else
-            {
-                WarriorCount -= NextRaidCount;
-                NextRaidCount += RaidCountIncrease;
-                _soundsPlayer.Fight();
-            }
-
-            UpdateTexts();
-
-            if (WarriorCount < 0)
-            {
-                GameOver();
-            }
+            GameOver();
         }
     }
 
@@ -122,12 +122,13 @@ public class GameManager : MonoBehaviour
         {
             PeasantCount++;
             PeasantButton.interactable = true;
-            
+
             _soundsPlayer.Spawn();
             _peasantsBought++;
 
             UpdateTexts();
-            if (PeasantCount >= PeasantsToWin) {
+            if (PeasantCount >= PeasantsToWin)
+            {
                 Win();
             }
         });
@@ -174,28 +175,34 @@ public class GameManager : MonoBehaviour
         GameOverScreen.SetActive(true);
     }
 
-    private void Win() {
+    private void Win()
+    {
         Time.timeScale = 0;
 
         winScreenSummaryText.text = $"Вы выиграли: \n\n" +
-            $"Крестьян нанято: {_peasantsBought}";    
+            $"Крестьян нанято: {_peasantsBought}";
         WinScreen.SetActive(true);
     }
 
-    public void EnableSound() {
+    public void EnableSound()
+    {
         var audio = GameObject.Find("AudioSources").GetComponent<AudioSource>();
         var soundImg = GameObject.Find("SoundButton").GetComponent<Image>();
 
-        if (audio.mute) {
+        if (audio.mute)
+        {
             audio.mute = false;
             soundImg.color = Color.white;
-        } else {
+        }
+        else
+        {
             audio.mute = true;
             soundImg.color = Color.gray;
         }
     }
 
-    public void Pause() {
+    public void Pause()
+    {
         bool isPaused = Time.timeScale == 0;
         PauseScreen.SetActive(!isPaused);
         Time.timeScale = isPaused ? 1 : 0;

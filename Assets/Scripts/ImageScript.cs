@@ -6,11 +6,10 @@ using UnityEngine.UI;
 
 public class ImageScript : MonoBehaviour
 {
-    public float MaxSeconds = 1.0f;
-    public float CurrentSeconds;
-    public bool Tick = false;
-    public bool ManualStart = false;
-    private Image _image;
+    [SerializeField] private float MaxSeconds = 1.0f;
+    [SerializeField] private bool ManualStart = false;
+    [SerializeField] private Image _image;
+    private float CurrentSeconds;
     private Action _callback;
     private bool _isPalying = false;
     // Start is called before the first frame update
@@ -25,15 +24,13 @@ public class ImageScript : MonoBehaviour
     {
         if (ManualStart && !_isPalying) return;
 
-        Tick = false;
         CurrentSeconds -= Time.deltaTime;
 
         if (CurrentSeconds <= 0)
         {
-            Tick = true;
             CurrentSeconds = MaxSeconds;
 
-            if (ManualStart && _callback != null)
+            if (_callback != null)
             {
                 _isPalying = false;
                 _callback.Invoke();
@@ -50,5 +47,9 @@ public class ImageScript : MonoBehaviour
         _callback = onDone;
         MaxSeconds = seconds;
         CurrentSeconds = MaxSeconds;
+    }
+
+    public void AddCycleCallback(Action doneAction) {
+        _callback = doneAction;
     }
 }
